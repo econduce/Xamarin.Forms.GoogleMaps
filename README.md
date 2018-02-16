@@ -1,7 +1,7 @@
-## ![](logo.png) Xamarin.Forms.GoogleMaps [![Build status](https://build.mobile.azure.com/v0.1/apps/99e6fb9e-fe8c-49df-b190-8aa1732a0ad2/branches/master/badge)](https://mobile.azure.com) [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/Xamarin-Forms-GoogleMaps/public)
-
 ## Fork info:
 This fork aims to be updated with the parent project, but adding support for clustered pins (from [issue 123](https://github.com/amay077/Xamarin.Forms.GoogleMaps/issues/123))
+
+## ![](logo.png) Xamarin.Forms.GoogleMaps [![Build status](https://build.mobile.azure.com/v0.1/apps/99e6fb9e-fe8c-49df-b190-8aa1732a0ad2/branches/master/badge)](https://mobile.azure.com) [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/Xamarin-Forms-GoogleMaps/public)
 
 [日本語の README はこちら！](README-ja.md)
 
