@@ -1,5 +1,46 @@
 Xamarin.Forms.GoogleMaps Release Notes
 ----
+# 2.3.0-beta6
+
+## Bug Fixes
+
+* #[Android]Fix Polygon, Polyline, Circle, Pin, GroundOverlays does not work
+
+# 2.3.0-beta5
+
+## Bug Fixes
+
+* #373 [Android]Improve view initialization and uninitialization
+
+# 2.3.0-beta4
+
+## Bug Fixes
+
+* #40 [iOS]Fix bundle xxx@1x.png, xxx@2x.png, xxx@3x.png does not work for marker icon.
+
+# 2.3.0-beta3
+
+## Bug Fixes
+
+* #431 [iOS]Fix doesn't work with Xamarin.Google.iOS.Maps 2.4.0+
+
+# 2.3.0-beta2
+
+## Bug Fixes
+
+* #367 [iOS]Fix MyLocationEnabled doesn't work 
+* #421 [iOS/Android/UWP]Fix InitialCameraUpdate parsing failed
+
+# 2.3.0-beta1
+
+## New Features
+
+* #29 [Android/iOS]Add OnMarkerCreating, OnMarkerCreated, OnMarkerDeleting and OnMarkerDeleted callback methods for custom renderer
+
+## Bug Fixes
+
+* #40 [iOS]Fix icon size is bigger than Android when load from bundle or stream
+
 # 2.2.1
 
 ## Bug Fixes

@@ -34,7 +34,7 @@ namespace Xamarin.Forms.GoogleMaps.iOS
                 new PolylineLogic(),
                 new PolygonLogic(),
                 new CircleLogic(),
-                new PinLogic(),
+                new PinLogic(OnMarkerCreating, OnMarkerCreated, OnMarkerDeleting, OnMarkerDeleted),
                 new TileLayerLogic(),
                 new GroundOverlayLogic()
             };
@@ -54,17 +54,24 @@ namespace Xamarin.Forms.GoogleMaps.iOS
         {
             if (disposing)
             {
-                Map.OnSnapshot -= OnSnapshot;
-                _cameraLogic.Unregister();
-
-                foreach (var logic in _logics)
-                    logic.Unregister(NativeMap, Map);
+                if(Map!=null)
+                {
+                    Map.OnSnapshot -= OnSnapshot;
+                    foreach (var logic in _logics)
+                    {
+                        logic.Unregister(NativeMap, Map);
+                    }
+                }               
+                _cameraLogic.Unregister();              
 
                 var mkMapView = (MapView)Control;
-                mkMapView.CoordinateLongPressed -= CoordinateLongPressed;
-                mkMapView.CoordinateTapped -= CoordinateTapped;
-                mkMapView.CameraPositionChanged -= CameraPositionChanged;
-                mkMapView.DidTapMyLocationButton = null;
+                if(mkMapView!=null)
+                {
+                    mkMapView.CoordinateLongPressed -= CoordinateLongPressed;
+                    mkMapView.CoordinateTapped -= CoordinateTapped;
+                    mkMapView.CameraPositionChanged -= CameraPositionChanged;
+                    mkMapView.DidTapMyLocationButton = null;
+                }
             }
 
             base.Dispose(disposing);
@@ -132,6 +139,7 @@ namespace Xamarin.Forms.GoogleMaps.iOS
                 UpdateIsTrafficEnabled();
                 UpdatePadding();
                 UpdateMapStyle();
+                UpdateMyLocationEnabled();
                 _uiSettingsLogic.Initialize();
 
                 foreach (var logic in _logics)
@@ -297,7 +305,7 @@ namespace Xamarin.Forms.GoogleMaps.iOS
 
         private void UpdateIsShowingUser(bool? initialMyLocationButtonEnabled = null)
         {
-            ((MapView)Control).MyLocationEnabled = initialMyLocationButtonEnabled ?? ((Map)Element).IsShowingUser;
+            ((MapView)Control).MyLocationEnabled = ((Map)Element).IsShowingUser;
             ((MapView)Control).Settings.MyLocationButton = initialMyLocationButtonEnabled ?? ((Map)Element).IsShowingUser;
         }
 
@@ -359,5 +367,49 @@ namespace Xamarin.Forms.GoogleMaps.iOS
                 ((MapView)Control).MapStyle = mapStyle;
             }
         }
+
+        #region Overridable Members
+
+        /// <summary>
+        /// Call when before marker create.
+        /// You can override your custom renderer for customize marker.
+        /// </summary>
+        /// <param name="outerItem">the pin.</param>
+        /// <param name="innerItem">the marker options.</param>
+        protected virtual void OnMarkerCreating(Pin outerItem, Marker innerItem)
+        {
+        }
+
+        /// <summary>
+        /// Call when after marker create.
+        /// You can override your custom renderer for customize marker.
+        /// </summary>
+        /// <param name="outerItem">the pin.</param>
+        /// <param name="innerItem">thr marker.</param>
+        protected virtual void OnMarkerCreated(Pin outerItem, Marker innerItem)
+        {
+        }
+
+        /// <summary>
+        /// Call when before marker delete.
+        /// You can override your custom renderer for customize marker.
+        /// </summary>
+        /// <param name="outerItem">the pin.</param>
+        /// <param name="innerItem">thr marker.</param>
+        protected virtual void OnMarkerDeleting(Pin outerItem, Marker innerItem)
+        {
+        }
+
+        /// <summary>
+        /// Call when after marker delete.
+        /// You can override your custom renderer for customize marker.
+        /// </summary>
+        /// <param name="outerItem">the pin.</param>
+        /// <param name="innerItem">thr marker.</param>
+        protected virtual void OnMarkerDeleted(Pin outerItem, Marker innerItem)
+        {
+        }
+
+        #endregion    
     }
 }

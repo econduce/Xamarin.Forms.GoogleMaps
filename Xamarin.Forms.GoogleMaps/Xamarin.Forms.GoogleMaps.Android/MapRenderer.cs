@@ -7,7 +7,6 @@ using Android.OS;
 using Java.Lang;
 using Xamarin.Forms.Platform.Android;
 using Math = System.Math;
-using Android.Util;
 using Android.App;
 using Android.Graphics;
 using Xamarin.Forms.GoogleMaps.Logics.Android;
@@ -20,7 +19,7 @@ using Xamarin.Forms.GoogleMaps.Internals;
 
 namespace Xamarin.Forms.GoogleMaps.Android
 {
-    public class MapRenderer : ViewRenderer,
+    public class MapRenderer : ViewRenderer<Map, global::Android.Views.View>,
         GoogleMap.IOnMapClickListener,
         GoogleMap.IOnMapLongClickListener,
         GoogleMap.IOnMyLocationButtonClickListener
@@ -39,7 +38,7 @@ namespace Xamarin.Forms.GoogleMaps.Android
                 new PolylineLogic(),
                 new PolygonLogic(),
                 new CircleLogic(),
-                new PinLogic(),
+                new PinLogic(OnMarkerCreating, OnMarkerCreated, OnMarkerDeleting, OnMarkerDeleted),
                 new TileLayerLogic(),
                 new GroundOverlayLogic()
             };
@@ -52,24 +51,26 @@ namespace Xamarin.Forms.GoogleMaps.Android
 
         protected GoogleMap NativeMap { get; private set; }
 
-        protected Map Map => (Map)Element;
+        protected Map Map => Element;
 
-        private GoogleMap _oldNativeMap;
-        private Map _oldMap;
+        private bool _ready = false;
+        private bool _onLayout = false;
 
-        bool _ready = false;
-        bool _onLayout = false;
-
-        float _scaledDensity;
+        private float _scaledDensity;
 
         public override SizeRequest GetDesiredSize(int widthConstraint, int heightConstraint)
         {
             return new SizeRequest(new Size(Context.ToPixels(40), Context.ToPixels(40)));
         }
 
-        protected override async void OnElementChanged(ElementChangedEventArgs<View> e)
+        protected override async void OnElementChanged(ElementChangedEventArgs<Map> e)
         {
             base.OnElementChanged(e);
+
+            if (e.OldElement == e.NewElement)
+            {
+                return;
+            }
 
             // For XAML Previewer or FormsGoogleMaps.Init not called.
             if (!FormsGoogleMaps.IsInitialized)
@@ -85,7 +86,30 @@ namespace Xamarin.Forms.GoogleMaps.Android
                 return;
             }
 
-            var oldMapView = (MapView)Control;
+            // Uninitialize old view
+            GoogleMap oldNativeMap = null;
+            Map oldMap = null;
+            if (e.OldElement != null)
+            {
+                try
+                {
+                    var oldNativeView = Control as MapView;
+                    oldNativeMap = await oldNativeView?.GetGoogleMapAsync();
+                    oldMap = e.OldElement;
+                    Uninitialize(oldNativeMap, oldMap);
+                    oldNativeView?.Dispose();
+                } 
+                catch (System.Exception ex) 
+                {
+                    var message = ex.Message;
+                    System.Diagnostics.Debug.WriteLine($"Uninitialize old view failed. - {message}");
+                }
+            }
+
+            if (e.NewElement == null)
+            {
+                return;
+            }
 
             var mapView = new MapView(Context);
             mapView.OnCreate(s_bundle);
@@ -95,40 +119,24 @@ namespace Xamarin.Forms.GoogleMaps.Android
             var activity = Context as Activity;
             if (activity != null)
             {
-                var metrics = new DisplayMetrics();
-                activity.WindowManager.DefaultDisplay.GetMetrics(metrics);
-                _scaledDensity = metrics.ScaledDensity;
+                _scaledDensity = activity.GetScaledDensity();
+                _cameraLogic.ScaledDensity = _scaledDensity;
                 foreach (var logic in _logics)
                 {
                     logic.ScaledDensity = _scaledDensity;
                 }
-
-                _cameraLogic.ScaledDensity = _scaledDensity;
             }
 
-            if (e.OldElement != null)
+            var newMap = e.NewElement;
+            NativeMap = await mapView.GetGoogleMapAsync();
+
+            foreach (var logic in _logics)
             {
-                var oldMapModel = (Map)e.OldElement;
-
-                oldMapModel.OnSnapshot -= OnSnapshot;
-                _cameraLogic.Unregister();
-                oldMapView.Dispose();
+                logic.Register(oldNativeMap, oldMap, NativeMap, newMap);
+                logic.ScaledDensity = _scaledDensity;
             }
 
-            if (oldMapView != null)
-            {
-                _oldNativeMap = await oldMapView.GetGoogleMapAsync();
-                _oldMap = (Map)e.OldElement;
-            }
-
-            NativeMap = await ((MapView)Control).GetGoogleMapAsync();
-
-            _cameraLogic.Register(Map, NativeMap);
-            Map.OnSnapshot += OnSnapshot;
-
-            _uiSettingsLogic.Register(Map, NativeMap);
-
-            OnMapReady(NativeMap);
+            OnMapReady(NativeMap, newMap);
         }
 
         private void OnSnapshot(TakeSnapshotMessage snapshotMessage)
@@ -142,15 +150,18 @@ namespace Xamarin.Forms.GoogleMaps.Android
             }));
         }
 
-        void OnMapReady(GoogleMap map)
+        private void OnMapReady(GoogleMap nativeMap, Map map)
         {
-            if (map != null)
+            if (nativeMap != null)
             {
-                _cameraLogic.Register(Map, NativeMap);
+                _cameraLogic.Register(map, nativeMap);
 
-                map.SetOnMapClickListener(this);
-                map.SetOnMapLongClickListener(this);
-                map.SetOnMyLocationButtonClickListener(this);
+                _uiSettingsLogic.Register(map, nativeMap);
+                Map.OnSnapshot += OnSnapshot;
+
+                nativeMap.SetOnMapClickListener(this);
+                nativeMap.SetOnMapLongClickListener(this);
+                nativeMap.SetOnMyLocationButtonClickListener(this);
 
                 UpdateIsShowingUser(_uiSettingsLogic.MyLocationButtonEnabled);
                 UpdateHasScrollEnabled(_uiSettingsLogic.ScrollGesturesEnabled);
@@ -164,11 +175,6 @@ namespace Xamarin.Forms.GoogleMaps.Android
 
                 SetMapType();
                 SetPadding();
-            }
-
-            foreach (var logic in _logics)
-            {
-                logic.Register(_oldNativeMap, _oldMap, NativeMap, Map);
             }
 
             _ready = true;
@@ -204,7 +210,6 @@ namespace Xamarin.Forms.GoogleMaps.Android
         void InitializeLogic()
         {
             _cameraLogic.MoveCamera(Map.InitialCameraUpdate);
-            //_cameraLogic.MoveToRegion(((Map)Element).LastMoveToRegion, false);
 
             foreach (var logic in _logics)
             {
@@ -407,30 +412,97 @@ namespace Xamarin.Forms.GoogleMaps.Android
             );
         }
 
+        #region Overridable Members
+
+        /// <summary>
+        /// Call when before marker create.
+        /// You can override your custom renderer for customize marker.
+        /// </summary>
+        /// <param name="outerItem">the pin.</param>
+        /// <param name="innerItem">the marker options.</param>
+        protected virtual void OnMarkerCreating(Pin outerItem, MarkerOptions innerItem)
+        {
+        }
+
+        /// <summary>
+        /// Call when after marker create.
+        /// You can override your custom renderer for customize marker.
+        /// </summary>
+        /// <param name="outerItem">the pin.</param>
+        /// <param name="innerItem">thr marker.</param>
+        protected virtual void OnMarkerCreated(Pin outerItem, Marker innerItem)
+        {
+        }
+
+        /// <summary>
+        /// Call when before marker delete.
+        /// You can override your custom renderer for customize marker.
+        /// </summary>
+        /// <param name="outerItem">the pin.</param>
+        /// <param name="innerItem">thr marker.</param>
+        protected virtual void OnMarkerDeleting(Pin outerItem, Marker innerItem)
+        {
+        }
+
+        /// <summary>
+        /// Call when after marker delete.
+        /// You can override your custom renderer for customize marker.
+        /// </summary>
+        /// <param name="outerItem">the pin.</param>
+        /// <param name="innerItem">thr marker.</param>
+        protected virtual void OnMarkerDeleted(Pin outerItem, Marker innerItem)
+        {
+        }
+
+        #endregion
+
+        private void Uninitialize(GoogleMap nativeMap, Map map) 
+        {
+            try
+            {
+                if (nativeMap == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Uninitialize failed - {nameof(nativeMap)} is null");
+                    return;
+                }
+
+                if (map == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Uninitialize failed - {nameof(map)} is null");
+                    return;
+                }
+
+                _uiSettingsLogic.Unregister();
+
+                map.OnSnapshot -= OnSnapshot;
+                _cameraLogic.Unregister();
+
+                foreach (var logic in _logics)
+                {
+                    logic.Unregister(nativeMap, map);
+                }
+
+                nativeMap.SetOnMapClickListener(null);
+                nativeMap.SetOnMapLongClickListener(null);
+                nativeMap.SetOnMyLocationButtonClickListener(null);
+
+                nativeMap.MyLocationEnabled = false;
+                nativeMap.Dispose();
+            }
+            catch (System.Exception ex)
+            {
+                var message = ex.Message;
+                System.Diagnostics.Debug.WriteLine($"Uninitialize failed. - {message}");
+            }
+        }
+
         bool _disposed;
         protected override void Dispose(bool disposing)
         {
             if (disposing && !_disposed)
             {
                 _disposed = true;
-
-                _uiSettingsLogic.Unregister();
-
-                Map.OnSnapshot -= OnSnapshot;
-                _cameraLogic.Unregister();
-
-                foreach (var logic in _logics)
-                    logic.Unregister(NativeMap, Map);
-
-                if (NativeMap != null)
-                {
-                    NativeMap.SetOnMapClickListener(null);
-                    NativeMap.SetOnMapLongClickListener(null);
-                    NativeMap.SetOnMyLocationButtonClickListener(null);
-
-                    NativeMap.MyLocationEnabled = false;
-                    NativeMap.Dispose();
-                }
+                Uninitialize(NativeMap, Map);
             }
 
             base.Dispose(disposing);
