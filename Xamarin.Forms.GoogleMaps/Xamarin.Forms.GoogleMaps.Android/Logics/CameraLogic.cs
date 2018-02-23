@@ -30,7 +30,7 @@ namespace Xamarin.Forms.GoogleMaps.Logics.Android
             nativeMap.CameraChange += NativeMap_CameraChange;
             nativeMap.CameraMoveStarted += NativeMap_CameraMoveStarted;
             nativeMap.CameraMove += NativeMap_CameraMove;
-            nativeMap.CameraIdle += NativeMap_CameraIdle;
+            //nativeMap.CameraIdle += NativeMap_CameraIdle;
         }
 
         public override void Unregister()
@@ -50,7 +50,7 @@ namespace Xamarin.Forms.GoogleMaps.Logics.Android
             nativeMap.CameraChange -= NativeMap_CameraChange;
             nativeMap.CameraMoveStarted -= NativeMap_CameraMoveStarted;
             nativeMap.CameraMove -= NativeMap_CameraMove;
-            nativeMap.CameraIdle -= NativeMap_CameraIdle;
+            //nativeMap.CameraIdle -= NativeMap_CameraIdle;
         }
 
         public override void OnMoveToRegionRequest(MoveToRegionMessage m)

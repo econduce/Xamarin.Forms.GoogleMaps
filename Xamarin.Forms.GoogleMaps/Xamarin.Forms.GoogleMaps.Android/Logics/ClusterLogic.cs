@@ -43,12 +43,12 @@ namespace Xamarin.Forms.GoogleMaps.Logics.Android
             /* Choose the right algorithm */
             switch (this.Map.ClusterOptions.Algorithm)
             {
-                case ClusterAlgorithm.GridBased:
-                    this._clusterManager.SetAlgorithm(new GridBasedAlgorithm());
-                    break;
                 case ClusterAlgorithm.NonHierarchicalDistanceBased:
+                    this._clusterManager.Algorithm = new NonHierarchicalDistanceBasedAlgorithm();
+                    break;
+                case ClusterAlgorithm.GridBased:
                 default:
-                    this._clusterManager.SetAlgorithm(new NonHierarchicalDistanceBasedAlgorithm());
+                    this._clusterManager.Algorithm = new GridBasedAlgorithm();
                     break;
             }
 
@@ -60,11 +60,11 @@ namespace Xamarin.Forms.GoogleMaps.Logics.Android
                 /* Handle the cluster request by forwarding it to clusterManager.Cluster() */
                 this.Map.OnCluster = HandleClusterRequest;
 
-                this.NativeMap.SetOnCameraChangeListener(this._clusterManager);
+                this.NativeMap.SetOnCameraIdleListener(this._clusterManager);
                 this.NativeMap.SetOnMarkerClickListener(this._clusterManager);
                 //this.NativeMap.SetOnInfoWindowClickListener(this._clusterManager);
 
-                this._clusterManager.SetRenderer(new XamarinClusterRenderer(Xamarin.Forms.Forms.Context, this.Map, this.NativeMap, this._clusterManager));
+                this._clusterManager.Renderer = new XamarinClusterRenderer(Xamarin.Forms.Forms.Context, this.Map, this.NativeMap, this._clusterManager);
 
                 this._clusterManager.SetOnClusterClickListener(this._clusterHandler);
                 this._clusterManager.SetOnClusterInfoWindowClickListener(this._clusterHandler);
@@ -77,7 +77,7 @@ namespace Xamarin.Forms.GoogleMaps.Logics.Android
         {
             if (nativeMap != null)
             {
-                this.NativeMap.SetOnCameraChangeListener(null);
+                this.NativeMap.SetOnCameraIdleListener(null);
                 this.NativeMap.SetOnMarkerClickListener(null);
                 //this.NativeMap.SetOnInfoWindowClickListener(null);
 
@@ -223,7 +223,7 @@ namespace Xamarin.Forms.GoogleMaps.Logics.Android
             if (outerItem?.Icon?.Type == BitmapDescriptorType.View && outerItem?.Icon?.View != null)
             {
                 var iconView = outerItem.Icon.View;
-                var nativeView = await Utils.ConvertFormsToNative(iconView, new Rectangle(0, 0, (double)Utils.DpToPx((float)iconView.WidthRequest), (double)Utils.DpToPx((float)iconView.HeightRequest)), Platform.Android.Platform.CreateRendererWithContext(iconView, Forms.Context));
+                var nativeView = await Utils.ConvertFormsToNative(iconView, new Rectangle(0, 0, (double)Utils.DpToPx((float)iconView.WidthRequest), (double)Utils.DpToPx((float)iconView.HeightRequest)), Platform.Android.Platform.CreateRenderer(iconView));
                 var otherView = new FrameLayout(nativeView.Context);
                 nativeView.LayoutParameters = new FrameLayout.LayoutParams(Utils.DpToPx((float)iconView.WidthRequest), Utils.DpToPx((float)iconView.HeightRequest));
                 otherView.AddView(nativeView);

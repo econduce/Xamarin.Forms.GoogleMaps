@@ -5,12 +5,14 @@ using System.Linq;
 using CoreGraphics;
 using Google.Maps;
 using UIKit;
+using Xamarin.Forms.GoogleMaps.iOS;
 using Xamarin.Forms.GoogleMaps.iOS.Extensions;
 namespace Xamarin.Forms.GoogleMaps.Logics.iOS
 {
     internal class PinLogic : DefaultPinLogic<Marker, MapView>
     {
         protected override IList<Pin> GetItems(Map map) => map.Pins;
+        protected IList<Pin> GetClusteredItems(Map map) => map.ClusteredPins;
 
         private bool _onMarkerEvent;
         private Pin _draggingPin;
@@ -134,6 +136,11 @@ namespace Xamarin.Forms.GoogleMaps.Logics.iOS
             return GetItems(Map).FirstOrDefault(outerItem => ReferenceEquals(outerItem.NativeObject, marker));
         }
 
+        Pin LookupClusteredPin(Marker marker)
+        {
+            return GetClusteredItems(Map).FirstOrDefault(outerItem => ((ClusteredMarker)outerItem.NativeObject).Snippet == marker.Snippet);
+        }
+
         void OnInfoTapped(object sender, GMSMarkerEventEventArgs e)
         {
             // lookup pin
@@ -164,6 +171,9 @@ namespace Xamarin.Forms.GoogleMaps.Logics.iOS
         {
             // lookup pin
             var targetPin = LookupPin(marker);
+
+            if (targetPin == null)
+                targetPin = LookupClusteredPin(marker);
 
             // If set to PinClickedEventArgs.Handled = true in app codes,
             // then all pin selection controlling by app.

@@ -65,6 +65,9 @@
     <Reference Include="Google.Maps">
       <HintPath>$(SolutionDir)\packages\Xamarin.Google.iOS.Maps.2.5.0\lib\Xamarin.iOS10\Google.Maps.dll</HintPath>
     </Reference>
+    <Reference Include="GoogleMapsUtils.iOS">
+      <HintPath>..\..\..\..\Econduce\Econduce.iOS\External\GoogleMapsUtils.iOS.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extensions\CameraUpdateExtensions.cs" />
@@ -92,6 +95,8 @@
     <Compile Include="Extensions\CameraPositionExtensions.cs" />
     <Compile Include="Extensions\ThicknessExtension.cs" />
     <Compile Include="Logics\UiSettingsLogic.cs" />
+    <Compile Include="ClusteredMarker.cs" />
+    <Compile Include="Logics\ClusterLogic.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

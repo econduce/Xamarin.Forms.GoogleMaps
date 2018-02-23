@@ -88,6 +88,8 @@
     <Compile Include="CameraIdledEventArgs.cs" />
     <Compile Include="CameraMovingEventArgs.cs" />
     <Compile Include="Internals\ProductInformation.cs" />
+    <Compile Include="ClusterAlgorithm.cs" />
+    <Compile Include="ClusterOptions.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

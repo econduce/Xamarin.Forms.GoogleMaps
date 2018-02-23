@@ -14,6 +14,7 @@ namespace Xamarin.Forms.GoogleMaps.Logics.Android
     internal class PinLogic : DefaultPinLogic<Marker, GoogleMap>
     {
         protected override IList<Pin> GetItems(Map map) => map.Pins;
+        protected IList<Pin> GetClusteredItems(Map map) => map.ClusteredPins;
 
         private volatile bool _onMarkerEvent = false;
         private Pin _draggingPin;
@@ -128,6 +129,11 @@ namespace Xamarin.Forms.GoogleMaps.Logics.Android
             return GetItems(Map).FirstOrDefault(outerItem => ((Marker)outerItem.NativeObject).Id == marker.Id);
         }
 
+        Pin LookupClusteredPin(Marker marker)
+        {
+            return GetClusteredItems(Map).FirstOrDefault(outerItem => ((ClusteredMarker)outerItem.NativeObject).Snippet == marker.Snippet);
+        }
+
         void OnInfoWindowClick(object sender, GoogleMap.InfoWindowClickEventArgs e)
         {
             // lookup pin
@@ -160,6 +166,9 @@ namespace Xamarin.Forms.GoogleMaps.Logics.Android
         {
             // lookup pin
             var targetPin = LookupPin(e.Marker);
+
+            if (targetPin == null)
+                targetPin = LookupClusteredPin(e.Marker);
 
             // If set to PinClickedEventArgs.Handled = true in app codes,
             // then all pin selection controlling by app.
@@ -236,8 +245,8 @@ namespace Xamarin.Forms.GoogleMaps.Logics.Android
         {
             if (e.PropertyName == Map.SelectedPinProperty.PropertyName)
             {
-                if (!_onMarkerEvent)
-                    UpdateSelectedPin(Map.SelectedPin);
+                //if (!_onMarkerEvent)
+                    //UpdateSelectedPin(Map.SelectedPin);
                 Map.SendSelectedPinChanged(Map.SelectedPin);
             }
         }
@@ -253,8 +262,12 @@ namespace Xamarin.Forms.GoogleMaps.Logics.Android
             }
             else
             {
-                // lookup pin
-                var targetPin = LookupPin(pin.NativeObject as Marker);
+                var nativePin = pin.NativeObject as Marker;
+                var targetPin = LookupPin(nativePin);
+
+                if (targetPin == null)
+                    targetPin = LookupClusteredPin(nativePin);
+
                 (targetPin?.NativeObject as Marker)?.ShowInfoWindow();
             }
         }
