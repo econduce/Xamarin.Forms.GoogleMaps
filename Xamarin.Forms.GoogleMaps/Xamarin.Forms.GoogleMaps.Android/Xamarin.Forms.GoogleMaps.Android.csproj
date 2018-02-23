@@ -113,6 +113,9 @@
     <Reference Include="Xamarin.Forms.Platform.Android">
       <HintPath>$(SolutionDir)\packages\Xamarin.Forms.2.3.4.247\lib\MonoAndroid10\Xamarin.Forms.Platform.Android.dll</HintPath>
     </Reference>
+    <Reference Include="GoogleMapsUtilityBinding">
+      <HintPath>..\..\..\..\packages\Xamarin.Android.Maps.Utils.0.5.0\lib\MonoAndroid10\GoogleMapsUtilityBinding.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extensions\EnumerableExtensions.cs" />
