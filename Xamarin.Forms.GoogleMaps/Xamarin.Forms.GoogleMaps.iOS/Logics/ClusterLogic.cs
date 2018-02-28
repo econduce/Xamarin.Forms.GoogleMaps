@@ -75,7 +75,7 @@ namespace Xamarin.Forms.GoogleMaps.Logics.iOS
             if (newNativeMap != null) {
             //    newNativeMap.InfoTapped += OnInfoTapped;
                 newNativeMap.TappedMarker += HandleGMSTappedMarker;
-            //    newNativeMap.InfoClosed += InfoWindowClosed;
+                newNativeMap.InfoClosed += InfoWindowClosed;
             //    newNativeMap.DraggingMarkerStarted += DraggingMarkerStarted;
             //    newNativeMap.DraggingMarkerEnded += DraggingMarkerEnded;
             //    newNativeMap.DraggingMarker += DraggingMarker;
@@ -140,6 +140,8 @@ namespace Xamarin.Forms.GoogleMaps.Logics.iOS
 
             if (ReferenceEquals(Map.SelectedPin, outerItem))
                 Map.SelectedPin = null;
+
+            this._clusterManager.RemoveItem(nativeMarker);
 
             return nativeMarker;
         }
@@ -227,6 +229,7 @@ namespace Xamarin.Forms.GoogleMaps.Logics.iOS
         {
             // lookup pin
             var targetPin = LookupPin(e.Marker);
+            Map.SendMapClicked(new Position(0, 0));
 
             try
             {

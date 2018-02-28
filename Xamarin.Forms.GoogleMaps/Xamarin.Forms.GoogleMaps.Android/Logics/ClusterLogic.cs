@@ -135,6 +135,8 @@ namespace Xamarin.Forms.GoogleMaps.Logics.Android
             if (ReferenceEquals(Map.SelectedPin, outerItem))
                 Map.SelectedPin = null;
 
+            this._clusterManager.RemoveItem(marker);
+
             return marker;
         }
 
